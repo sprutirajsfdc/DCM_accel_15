@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>Afternoon Shift</name>
+    <queueMembers>
+        <users>
+            <user>casemanagement@project.com</user>
+            <user>integration@00d5i00000cxcuzeat.com</user>
+            <user>insightssecurity@00d5i00000cxcuzeat.com</user>
+        </users>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>
