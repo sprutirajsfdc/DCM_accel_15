@@ -9,93 +9,88 @@
 Ver    Date            Author           LastModification
 1.0   26/04/2023     Subba Reddy        Initial Version
 **/
-public class skillBasedCaseApexClass 
-{
-    // Assign cases based on matching skills
-    public static void assignCases(List<Case> caseList){
-        // Map to store cases created with specific skills
+public class skillBasedCaseApexClass {
+    public static void assignCases(List<Case> caseList) {
         Map<String, Id> caseCreatedWithSkill = new Map<String, Id>();
-        // Iterate through the case list to find cases with assigned skills
-        for(Case caseCreatedWithSkills : caseList){
-            if(caseCreatedWithSkills.My_Skill__c != null){
-                caseCreatedWithSkill.put(caseCreatedWithSkills.My_Skill__c, caseCreatedWithSkills.Id);
+        for (Case caseCreatedWithSkills : caseList) {
+            system.debug('Skill__c      ' + caseCreatedWithSkills.Skill_Name__c);
+            if (caseCreatedWithSkills.Skill_Name__c != null) {
+                caseCreatedWithSkill.put(caseCreatedWithSkills.Skill_Name__c, caseCreatedWithSkills.Id);
+                system.debug('caseCreatedWithSkill' + caseCreatedWithSkill.KeySet());
             }
         }
-        // Retrieve available users who have selected skills matching the cases
-        List<Skill__c> availableUsersSelectedSkill = [SELECT Id, Name, (SELECT User__c FROM User_Skills__r) FROM Skill__c where Name =: caseCreatedWithSkill.KeySet()];
-        // Map to store matching skills with available users
-        Map<String, List<String>> matchingSkillInSelectedCaseAvailableUsers = new Map<String, List<String>>();
-        List<String> userList = new List<String>();
-        // Iterate through available skills to find matching users
-        for(Skill__c skillUsers : availableUsersSelectedSkill){
-            if(caseCreatedWithSkill.containsKey(skillUsers.Name)){
-                for(User_Skill__c userSkill : skillUsers.User_Skills__r){
-                    userList.add(userSkill.User__c);
+        if (!caseCreatedWithSkill.isEmpty()) {
+            //  List<Skill__c> availableUsersSelectedSkill = [SELECT Id, Name, (SELECT User__c FROM User_Skills__r) FROM Skill__c WHERE Name IN :caseCreatedWithSkill.keySet()];
+            List<User_Skill__c > availableUsersSelectedSkill1 = [SELECT User__c, Skill_Name__c FROM User_Skill__c where Skill_Name__c IN :caseCreatedWithSkill.keySet() ];
+            //system.debug('availableUsersSelectedSkill' + availableUsersSelectedSkill);
+            system.debug('availableUsersSelectedSkill' + availableUsersSelectedSkill1);
+            
+            
+            
+            Map<String, List<String>> matchingSkillInSelectedCaseAvailableUsers = new Map<String, List<String>>();
+            List<String> userList = new List<String>(); // Move the declaration inside the loop
+            
+            
+            
+            for (User_Skill__c skillUsers : availableUsersSelectedSkill1) {
+                system.debug('skillUsers.Skill_Name__c' + skillUsers.Skill_Name__c);
+                if (caseCreatedWithSkill.containsKey(skillUsers.Skill_Name__c)) {
+                    userList.Add(skillUsers.User__c);
+                    matchingSkillInSelectedCaseAvailableUsers.put(skillUsers.User__c, userList);
                 }
-                matchingSkillInSelectedCaseAvailableUsers.put(skillUsers.Name, userList);
             }
-        }
-        
-        system.debug('matchingSkillInSelectedCaseAvailableUsers: ' + matchingSkillInSelectedCaseAvailableUsers);
-        // Set to store the user Ids
-        Set<String> userIds = new Set<String>();
-        for(List<String> userList1 : matchingSkillInSelectedCaseAvailableUsers.values()){
-            userIds.addAll(userList1);
-        }
-        system.debug('separated ids ' + userIds);
-        
-        Case lastAssignedSkillCase;
-        try {
-            // Retrieve the last assigned case with an owner and a skill
-            lastAssignedSkillCase = [SELECT Id, OwnerId, My_Skill__c FROM Case WHERE OwnerId != null AND My_Skill__c != null ORDER BY CreatedDate DESC LIMIT 1];
-        } catch (Exception ex) {
-            lastAssignedSkillCase = null;
-        }
-        
-        // Initialize the user index to 0
-        Integer userIndex = 0;
-        // Check if there are more than one matchingAvailableSkillUsers users
-         // Check if there are more than one matching available skill users
-        if(userIds.size() > 1){
-            // Check if the last assigned case exists and has an owner
-            if (lastAssignedSkillCase != null && lastAssignedSkillCase.OwnerId != null) {
-                // Loop through the matchingAvailableSkillUsers to find the index of the last assigned Skill case user
-                Integer j = 0;
-                for(String userId : userIds){
-                    if (userId == lastAssignedSkillCase.OwnerId) {
-                        if(j == userIds.size()-1){
-                            userIndex = 0;
+            
+            System.debug('matchingSkillInSelectedCaseAvailableUsers: ' + matchingSkillInSelectedCaseAvailableUsers.Values());
+            
+            Set<String> userIds = new Set<String>();
+            for (List<String> userList1 : matchingSkillInSelectedCaseAvailableUsers.values()) {
+                userIds.addAll(userList1);
+            }
+            System.debug('separated ids ' + userIds);
+            
+            Case lastAssignedSkillCase;
+            try {
+                lastAssignedSkillCase = [SELECT Id, OwnerId, Skill_Name__c FROM Case WHERE OwnerId != null AND Skill_Name__c != null ORDER BY CreatedDate DESC LIMIT 1];
+            } catch (Exception ex) {
+                lastAssignedSkillCase = null;
+            }
+            
+            Integer userIndex = 0;
+            system.debug('userIds.size()/....'+ userIds.size());
+            if (userIds.size() > 1) {
+                if (lastAssignedSkillCase != null && lastAssignedSkillCase.OwnerId != null) {
+                    Integer j = 0;
+                    for (String userId : userIds) {
+                        if (userId == lastAssignedSkillCase.OwnerId) {
+                            if (j == userIds.size() - 1) {
+                                userIndex = 0;
+                            } else {
+                                userIndex = Math.mod(j + 1, userIds.size());
+                            }
                         }
-                        else {
-                            userIndex = Math.mod(j + 1, userIds.size()); 
-                        }
+                        j++;
                     }
-                    j++;
                 }
-            }
-            for(Case newCase : caseList){
-                system.debug('newCase.....'+newCase.Product__c);
-                if(newCase.My_Skill__c != null && (newCase.Priority == 'Low' || newCase.Priority == 'Medium' || newCase.Priority == 'High') && ( newCase.Product__c == null)){
-                    if(caseCreatedWithSkill.containsKey(newCase.My_Skill__c)){
-                        if (lastAssignedSkillCase != null) {
+                for (Case newCase : caseList) {
+                    System.debug('newCase.....' + newCase.Skill_Name__c);
+                    if (newCase.Skill_Name__c != null && (newCase.Priority == 'Low' || newCase.Priority == 'Medium' || newCase.Priority == 'High') && newCase.Product__c == null) {
+                        if (caseCreatedWithSkill.containsKey(newCase.Skill_Name__c)) {
                             List<String> userIdList = new List<String>(userIds);
-                            newCase.OwnerId = userIdList[userIndex];
-                            userIndex = Math.mod(userIndex + 1, userIds.size());
-                        } else {
-                            List<String> userIdList = new List<String>(userIds);
-                            newCase.OwnerId = userIdList[userIndex];
-                            userIndex = Math.mod(userIndex + 1, userIds.size());
+                            if (!userIdList.isEmpty()) { // Check if the list is empty before accessing elements
+                                newCase.OwnerId = userIdList[userIndex];
+                                userIndex = Math.mod(userIndex + 1, userIds.size());
+                            }
                         }
                     }
                 }
-            }
-        }
-        // Check if there is only one matching available skill user
-        Else if(userIds.size() <= 1){
-            for(Case css : caseList){
-                if(css.My_Skill__c != null && (css.Priority == 'Low' || css.Priority == 'Medium' || css.Priority == 'High') && (css.Product__c == null)){
-                    List<String> userIdList = new List<String>(userIds);
-                    css.OwnerId = userIdList[userIndex];
+            } else if (userIds.size() <= 1) {
+                for (Case css : caseList) {
+                    if (css.Skill_Name__c != null && (css.Priority == 'Low' || css.Priority == 'Medium' || css.Priority == 'High') && css.Product__c == null) {
+                        List<String> userIdList = new List<String>(userIds);
+                        if (!userIdList.isEmpty()) { // Check if the list is empty before accessing elements
+                            css.OwnerId = userIdList[userIndex];
+                        }
+                    }
                 }
             }
         }

@@ -10,17 +10,22 @@ Ver    Date            Author          LastModification
 public class EscalationTriggerHandler {
     
     public static void scheduleEscalation(List<Case> newCases) {
+        
+         EscalationTiming__c escTimes = EscalationTiming__c.getInstance();
+        Integer EscalationTime = Integer.valueOf(escTimes.EscalationTime__c);
+        system.debug('before escalation Time : ' + EscalationTime);
+        
         for (Case c : newCases) {
             if (c.status!='Escalated' && c.Status !='Closed') { // only schedule escalation job for non-escalated cases
                 String sDay;
                 String sHour;
-                if(integer.valueOf(c.CreatedDate.hour() + 9) > 23){// check if adding 9 to the hour exceeds 23
-                    sHour = string.valueOf(c.CreatedDate.hour() + (9-24)); // subtract 24 from the sum to wrap around to the next day
+                if(integer.valueOf(c.CreatedDate.hour() + EscalationTime) > 23){// check if adding 9 to the hour exceeds 23
+                    sHour = string.valueOf(c.CreatedDate.hour() + (EscalationTime-24)); // subtract 24 from the sum to wrap around to the next day
                     sDay = String.valueOf(c.CreatedDate.day()+1);// increment the day by 1
                     system.debug('sHour...'+sHour);//log the adjusted hour value
                 }
                 else{
-                    sHour = String.valueOf(c.CreatedDate.hour() + 9);// add 9 to the hour
+                    sHour = String.valueOf(c.CreatedDate.hour() + EscalationTime);// add 9 to the hour
                     sDay = String.valueOf(c.CreatedDate.day());// keep the day the same
                     system.debug('Else sHour' + sHour);// log the hour value
                 }

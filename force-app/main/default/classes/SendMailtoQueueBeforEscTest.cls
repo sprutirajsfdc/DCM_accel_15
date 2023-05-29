@@ -3,13 +3,15 @@ public class SendMailtoQueueBeforEscTest
 {
     @IsTest(seeAllData=True)
     static void testSendMailtoQueueMembers() {
-        list<case> lstcase = [Select Id,Ownerid,CaseNumber,Status,Owner.Name,Subject,Description,Priority from Case where Status='New' AND CreatedDate <= :System.now().addHours(-7) limit 1];
+        list<case> lstcase = [Select Id,Ownerid,CaseNumber,Status,Owner.Name,Subject,Description,Priority from Case where Status='New' AND CreatedDate <= :System.now().addMinutes(5) limit 1];
         
         Test.startTest();
         SendMailtoQueueMembers job = new SendMailtoQueueMembers();
         SendMailtoQueueMembers.scheduleJob();
+       
         job.execute(null); // Pass null for SchedulableContext as it is not used in this example
         Test.stopTest();
+        
         
         List<String> recipientEmails = new List<String>{'subbareddy.bollapu8500@gmail.com'};
             List<Messaging.SingleEmailMessage> messages = new List<Messaging.SingleEmailMessage>();

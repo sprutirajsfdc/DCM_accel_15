@@ -1,5 +1,10 @@
 public class SendMailtoQueueMembers implements Schedulable {
     public void execute(SchedulableContext sc) {
+        
+        EscalationTiming__c escTimes = EscalationTiming__c.getInstance();
+        Integer BeforeEscalationTime = Integer.valueOf(escTimes.BeforeCaseEscalationTime__c);
+        system.debug('before escalation Time : ' + BeforeEscalationTime);
+        
         Set<Id> userIds = new Set<Id>();
         List<GroupMember> members = [SELECT Id, GroupId, Group.Name, UserOrGroupId, Group.Type FROM GroupMember WHERE Group.Type = 'Queue'];
         if (members.size() > 0) {
@@ -15,7 +20,7 @@ public class SendMailtoQueueMembers implements Schedulable {
         System.debug('emails: ' + emails);
         List<String> emailAddresses = new List<String>(emails);
         List<Messaging.SingleEmailMessage> msgEmails = new List<Messaging.SingleEmailMessage>();
-        List<Case> cases = [SELECT Id, CaseNumber, Status, Subject, Owner.Name, Priority, Description, CreatedDate FROM Case WHERE Status = 'New' AND CreatedDate <= :System.now().addHours(-7)];
+        List<Case> cases = [SELECT Id, CaseNumber, Status, Subject, Owner.Name, Priority, Description, CreatedDate FROM Case WHERE Status = 'New' AND CreatedDate <= :System.now().addMinutes(-BeforeEscalationTime)];
         System.debug('cases: ' + cases);
         for (Case c : cases) {
             Messaging.SingleEmailMessage msg = new Messaging.SingleEmailMessage();
@@ -46,5 +51,6 @@ public class SendMailtoQueueMembers implements Schedulable {
         String jobName = 'Before Case Escalation Email Alert Job';
         String jobId = System.schedule(jobName, scheduleTime, job);
         System.debug('Scheduled job with ID: ' + jobId);
+        System.debug('Scheduled Time: ' + scheduleTime);
     }
 }
