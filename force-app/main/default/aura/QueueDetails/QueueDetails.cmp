@@ -1,0 +1,60 @@
+<aura:component controller="QueueController" implements="force:appHostable,flexipage:availableForAllPageTypes,forceCommunity:availableForAllPageTypes">
+    <aura:attribute name="queues" type="List" />
+    <aura:attribute name="selectedQueue" type="Object" />
+    <aura:attribute name="userDetails" type="List" />
+    <aura:attribute name="queue" type="Object" />
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+       <aura:attribute name="availableUsers" type="List" />
+
+    <!-- Screen 1: List of Queues -->
+      <lightning:card title="Queue Details" class="slds-m-around_medium">
+        <aura:if isTrue="{!not(empty(v.queues))}">
+            <div class="slds-grid slds-wrap">
+                <aura:iteration items="{!v.queues}" var="queue">
+                    <div class="slds-col slds-size_1-of-2 slds-p-around_medium">
+                        <lightning:card class="slds-card_boundary slds-card_custom" variant="custom">
+                            <div class="slds-card__header slds-grid slds-align_absolute-center">
+                                <h3 class="slds-text-heading_small slds-truncate">{!queue.Name}</h3>
+                            </div>
+                            <div class="slds-card__body slds-card__body_inner">
+                                <div class="slds-grid">
+                                    <div class="slds-col slds-size_1-of-1 slds-align_absolute-center">
+                                        <lightning:button variant="brand-outline"
+                                                          iconPosition="right" label="User Details"
+                                                          onclick="{!c.showUserDetails}"
+                                                          value="{!queue}"
+                                                          class="slds-button slds-button_neutral slds-button_icon slds-button_icon-medium slds-m-left_x-small slds-button_icon-hover" />
+                                    </div>
+                                </div>
+                            </div>
+                        </lightning:card>
+                    </div>
+                </aura:iteration>
+            </div>
+        </aura:if>
+    </lightning:card>
+   
+
+
+    
+    <!-- Screen 2: User Details -->
+    <lightning:card  class="slds-m-around_medium">
+        <aura:if isTrue="{!not(empty(v.selectedQueue))}">
+            <b><h2 class="slds-p-left_medium">Users In  Queue: {!v.selectedQueue.Name}</h2></b>
+            <aura:if isTrue="{!not(empty(v.userDetails))}">
+                <ul class="slds-list_ordered slds-m-around_x-small">
+                    <aura:iteration items="{!v.userDetails}" var="user">
+                        <li class="slds-item slds-m-around_x-small">
+                            <lightning:avatar src="{!user.AvatarUrl}" alternativeText="{!user.Name}" fallbackIconName="standard:user" size="medium" />
+                            <span class="slds-m-left_small">{!user.Name}</span>
+                        </li>
+                        <!-- Display other user information here -->
+                    </aura:iteration>
+                </ul>
+                <aura:set attribute="else">
+                    <p class="slds-p-left_medium">No user details found.</p>
+                </aura:set>
+            </aura:if>
+        </aura:if>
+    </lightning:card>
+</aura:component>

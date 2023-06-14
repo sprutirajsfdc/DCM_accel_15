@@ -11,4 +11,7 @@ if(trigger.Isbefore && trigger.isInsert){
     if(trigger.IsAfter && trigger.isInsert){
         EscalationTriggerHandler.scheduleEscalation(trigger.new);
     } 
+     if(trigger.IsAfter && trigger.isInsert){
+        BeforeEscalationMailHandler.schedulebeforeEscalation(trigger.new);
+    } 
 }
